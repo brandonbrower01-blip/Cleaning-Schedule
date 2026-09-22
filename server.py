@@ -199,31 +199,30 @@ def new_id(prefix):
 
 
 DEFAULT_TASKS = [
-    ("Wash the dishes", "Kitchen", 10, {"type": "days", "every": 1}),
-    ("Wipe the counters", "Kitchen", 5, {"type": "days", "every": 1}),
-    ("Take out the trash", "Kitchen", 10, {"type": "weekly", "days": [1, 4]}),
-    ("Sweep the floors", "Whole House", 15, {"type": "days", "every": 3}),
-    ("Scrub the toilet", "Bathroom", 20, {"type": "weekly", "days": [6]}),
-    ("Clean the mirror", "Bathroom", 5, {"type": "days", "every": 7}),
-    ("Change the sheets", "Bedroom", 15, {"type": "days", "every": 14}),
-    ("Vacuum the carpet", "Living Room", 15, {"type": "weekly", "days": [6]}),
-    ("Dust the shelves", "Living Room", 10, {"type": "days", "every": 10}),
-    ("Mow the lawn", "Outside", 25, {"type": "days", "every": 10}),
-    ("Deep clean the fridge", "Kitchen", 30, {"type": "monthly", "day": 1}),
+    ("Wash the dishes", "Kitchen", {"type": "days", "every": 1}),
+    ("Wipe the counters", "Kitchen", {"type": "days", "every": 1}),
+    ("Take out the trash", "Kitchen", {"type": "weekly", "days": [1, 4]}),
+    ("Sweep the floors", "Whole House", {"type": "days", "every": 3}),
+    ("Scrub the toilet", "Bathroom", {"type": "weekly", "days": [6]}),
+    ("Clean the mirror", "Bathroom", {"type": "days", "every": 7}),
+    ("Change the sheets", "Bedroom", {"type": "days", "every": 14}),
+    ("Vacuum the carpet", "Living Room", {"type": "weekly", "days": [6]}),
+    ("Dust the shelves", "Living Room", {"type": "days", "every": 10}),
+    ("Mow the lawn", "Outside", {"type": "days", "every": 10}),
+    ("Deep clean the fridge", "Kitchen", {"type": "monthly", "day": 1}),
 ]
 
 
 def seed_state():
     today = iso(date.today())
     tasks = []
-    for name, area, points, rec in DEFAULT_TASKS:
+    for name, area, rec in DEFAULT_TASKS:
         task = {
             "id": new_id("task"),
             "name": name,
             "area": area,
             "assignee": "",
             "notes": "",
-            "points": points,
             "recurrence": clean_recurrence(rec),
             "created": today,
             "start": today,
@@ -234,7 +233,22 @@ def seed_state():
         }
         task["next_due"] = compute_next_due(task)
         tasks.append(task)
-    return {"version": 1, "tasks": tasks, "log": [], "xp": 0}
+    return {"version": 1, "tasks": tasks, "log": []}
+
+
+def migrate(state):
+    """Drop fields left behind by older versions of the app.
+
+    Earlier builds scored chores with points and a running XP total.  That is
+    gone, so the keys are stripped rather than left to rot in the file; the
+    previous version is still on disk as chores.json.bak.
+    """
+    state.pop("xp", None)
+    for task in state.get("tasks", []):
+        task.pop("points", None)
+    for entry in state.get("log", []):
+        entry.pop("points", None)
+    return state
 
 
 class Store(object):
@@ -258,9 +272,8 @@ class Store(object):
             return seed_state()
         state.setdefault("tasks", [])
         state.setdefault("log", [])
-        state.setdefault("xp", 0)
         state.setdefault("version", 1)
-        return state
+        return migrate(state)
 
     def _write(self, state):
         directory = os.path.dirname(self.path) or "."
@@ -301,7 +314,6 @@ class Store(object):
                 "today": iso(date.today()),
                 "tasks": tasks,
                 "log": self.state["log"][:120],
-                "xp": self.state.get("xp", 0),
                 "areas": sorted({(t.get("area") or AREAS_FALLBACK) for t in tasks}),
             }
 
@@ -313,17 +325,11 @@ class Store(object):
             if not name:
                 raise ValueError("A task needs a name")
 
-            try:
-                points = int(payload.get("points", 10))
-            except (TypeError, ValueError):
-                points = 10
-
             fields = {
                 "name": name,
                 "area": str(payload.get("area", "")).strip()[:60] or AREAS_FALLBACK,
                 "assignee": str(payload.get("assignee", "")).strip()[:60],
                 "notes": str(payload.get("notes", "")).strip()[:400],
-                "points": min(500, max(0, points)),
                 "recurrence": clean_recurrence(payload.get("recurrence")),
             }
 
@@ -381,14 +387,11 @@ class Store(object):
             task["completions"] = int(task.get("completions", 0)) + 1
             task["next_due"] = compute_next_due(task)
 
-            points = int(task.get("points", 10))
-            self.state["xp"] = int(self.state.get("xp", 0)) + points
             self.state["log"].insert(0, {
                 "id": new_id("log"),
                 "task_id": task["id"],
                 "name": task["name"],
                 "area": task.get("area", AREAS_FALLBACK),
-                "points": points,
                 "date": iso(done_on),
                 "ts": int(time.time()),
                 "previous": iso(previous),
@@ -417,7 +420,6 @@ class Store(object):
             task["completions"] = max(0, int(task.get("completions", 1)) - 1)
             task["streak"] = max(0, int(entry.get("previous_streak", 0)))
             task["next_due"] = compute_next_due(task)
-            self.state["xp"] = max(0, int(self.state.get("xp", 0)) - int(entry.get("points", 0)))
             self._write(self.state)
             return task
 

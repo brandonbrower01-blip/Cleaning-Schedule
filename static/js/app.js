@@ -11,7 +11,6 @@
   var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var XP_PER_LEVEL = 100;
   var CACHE_KEY = 'blockchores.state';
   var REFRESH_MS = 60000;
 
@@ -80,8 +79,6 @@
     return prettyDate(iso);
   }
 
-  function levelFor(xp) { return Math.floor((xp || 0) / XP_PER_LEVEL); }
-
   function cacheSave() {
     try { window.localStorage.setItem(CACHE_KEY, JSON.stringify(state)); }
     catch (err) { /* private browsing, or the disk is full - not fatal */ }
@@ -149,14 +146,9 @@
   }
 
   function adopt(next) {
-    var before = state ? levelFor(state.xp) : null;
     state = next;
     cacheSave();
     render();
-    var after = levelFor(state.xp);
-    if (before !== null && after > before) {
-      toast('LEVEL UP!  You are level ' + after);
-    }
   }
 
   // --------------------------------------------------------------- lookups
@@ -185,7 +177,7 @@
     var da = a.next_due || '9999-12-31';
     var db = b.next_due || '9999-12-31';
     if (da !== db) { return da < db ? -1 : 1; }
-    return (b.points || 0) - (a.points || 0);
+    return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
   }
 
   function doneToday(task) {
@@ -204,13 +196,6 @@
   }
 
   function renderHud() {
-    var xp = state.xp || 0;
-    var level = levelFor(xp);
-    var into = xp % XP_PER_LEVEL;
-    byId('hud-level').innerHTML = String(level);
-    byId('xp-fill').style.width = Math.round((into / XP_PER_LEVEL) * 100) + '%';
-    byId('xp-text').innerHTML = xp + ' XP  &middot;  ' + (XP_PER_LEVEL - into) + ' to level ' + (level + 1);
-
     var left = 0;
     var all = state.tasks;
     for (var i = 0; i < all.length; i++) {
@@ -276,8 +261,7 @@
             boxAction + '" data-id="' + esc(task.id) + '">' + mark + '</button>';
     html += '<div class="task-body">';
     html += '<div class="task-name">' + esc(task.name) + '</div>';
-    html += '<div class="task-meta">' + taskChips(task, late) +
-            '<span class="chip">+' + (task.points || 0) + ' XP</span></div>';
+    html += '<div class="task-meta">' + taskChips(task, late) + '</div>';
     if (mode === 'all') {
       html += '<div class="task-meta">' + esc(task.schedule_text || '') +
               (task.completions ? ' &middot; done ' + task.completions + 'x' : '') + '</div>';
@@ -371,7 +355,6 @@
 
   function renderHistory() {
     var log = state.log || [];
-    var xp = state.xp || 0;
     var todayISO = today();
 
     var todayCount = 0, doneWeek = 0, best = 0, active = 0;
@@ -387,8 +370,6 @@
     }
 
     byId('stats').innerHTML =
-      '<div class="stat"><b>' + xp + '</b><span>Total XP</span></div>' +
-      '<div class="stat"><b>' + levelFor(xp) + '</b><span>Level</span></div>' +
       '<div class="stat"><b>' + todayCount + '</b><span>Done today</span></div>' +
       '<div class="stat"><b>' + doneWeek + '</b><span>Done this week</span></div>' +
       '<div class="stat"><b>' + best + '</b><span>Best streak</span></div>' +
@@ -410,8 +391,7 @@
         html += '<div class="log-day">' + esc(heading) + '</div>';
       }
       html += '<div class="log-entry"><span>' + esc(entry.name) +
-              ' <span class="chip chip-area">' + esc(entry.area || 'Misc') + '</span></span>' +
-              '<span class="pts">+' + (entry.points || 0) + ' XP</span></div>';
+              ' <span class="chip chip-area">' + esc(entry.area || 'Misc') + '</span></span></div>';
     }
     byId('history-body').innerHTML = html;
   }
@@ -438,7 +418,7 @@
   function completeTask(id) {
     var task = taskById(id);
     if (!task) { return; }
-    write(task, '/complete', { date: today() }, '+' + (task.points || 0) + ' XP  ' + task.name);
+    write(task, '/complete', { date: today() }, 'Done: ' + task.name);
   }
 
   function undoTask(id) {
@@ -487,7 +467,6 @@
     byId('f-area').value = task ? (task.area || '') : '';
     byId('f-assignee').value = task ? (task.assignee || '') : '';
     byId('f-notes').value = task ? (task.notes || '') : '';
-    byId('f-points').value = task ? (task.points || 0) : 10;
     byId('f-start').value = (task && task.start) ? task.start : today();
 
     var rec = (task && task.recurrence) ? task.recurrence : { type: 'days', every: 7 };
@@ -531,7 +510,6 @@
       area: byId('f-area').value.replace(/^\s+|\s+$/g, '') || 'Misc',
       assignee: byId('f-assignee').value.replace(/^\s+|\s+$/g, ''),
       notes: byId('f-notes').value.replace(/^\s+|\s+$/g, ''),
-      points: Number(byId('f-points').value) || 0,
       recurrence: collectRecurrence(),
       start: byId('f-start').value || today()
     };

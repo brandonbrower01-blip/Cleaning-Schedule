@@ -2,7 +2,7 @@
 
 A household cleaning schedule for the family iPad, built to run on **Safari on a
 1st generation iPad mini (iOS 9)** — and styled like Minecraft: sky blue, grass
-green, dirt brown and white, with an XP bar you fill by cleaning.
+green, dirt brown and white, in beveled blocks.
 
 ![views](docs/screenshot-today.png)
 
@@ -15,8 +15,8 @@ green, dirt brown and white, with an XP bar you fill by cleaning.
   you already finished today — each with a big tappable check box.
 - **Undo and snooze.** Check something off by mistake, tap it again. Not getting
   to it today? Push it a day.
-- **XP, levels and streaks.** Every task is worth XP; finishing them levels you
-  up and builds a per-task streak.
+- **Streaks.** Each task counts how many times in a row it was done before it
+  fell due, so you can see what actually keeps up.
 - **Rooms.** Filter the dashboard by Kitchen, Bathroom, Outside, or whatever you
   make up.
 - **Shared across devices.** State lives on the server, and every iPad refreshes
@@ -118,7 +118,6 @@ A task looks like this:
   "area": "Bathroom",
   "assignee": "",
   "notes": "",
-  "points": 20,
   "recurrence": {"type": "weekly", "days": [6]},
   "start": "2026-09-22"
 }

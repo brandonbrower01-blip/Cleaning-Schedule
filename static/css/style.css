@@ -205,47 +205,10 @@ body {
   -webkit-flex: 0 0 auto;
   flex: 0 0 auto;
   text-align: right;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #ffd45c;
   text-shadow: 2px 2px 0 #3d2c1e;
-}
-
-.hud-stats b { font-size: 16px; color: #ffd45c; }
-
-/* XP bar, straight out of the game HUD. */
-.xp {
-  position: relative;
-  z-index: 1;
-  height: 16px;
-  margin-top: 8px;
-  background-color: #3d2c1e;
-  border: 3px solid #241a12;
-  overflow: hidden;
-}
-
-.xp-fill {
-  height: 100%;
-  width: 0;
-  background-color: #7fe02a;
-  background-image: -webkit-linear-gradient(top, #a6f24f 0%, #5bc218 100%);
-  background-image: linear-gradient(to bottom, #a6f24f 0%, #5bc218 100%);
-}
-
-.xp-text {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 16px;
-  line-height: 14px;
-  text-align: center;
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: #ffffff;
-  /* Four offsets fake an outline, so the text reads over the bright fill
-     as well as the dark track behind it. */
-  text-shadow: 1px 1px 0 #1d1510, -1px 1px 0 #1d1510,
-               1px -1px 0 #1d1510, -1px -1px 0 #1d1510;
 }
 
 /* ---------- tabs -------------------------------------------------------- */
@@ -707,16 +670,6 @@ textarea { height: 70px; }
   font-size: 13px;
   background-color: rgba(255, 255, 255, 0.8);
   border-left: 5px solid #6aae45;
-}
-
-.log-entry .pts {
-  -webkit-flex: 0 0 auto;
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding-left: 10px;
-  font-size: 12px;
-  color: #3f6b28;
-  font-weight: bold;
 }
 
 .stat-row {

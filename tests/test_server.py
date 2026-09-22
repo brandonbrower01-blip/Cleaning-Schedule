@@ -21,7 +21,6 @@ def make_task(recurrence, last_completed=None, start=None, **extra):
         "id": "task_test",
         "name": "Test",
         "area": "Kitchen",
-        "points": 10,
         "recurrence": server.clean_recurrence(recurrence),
         "created": start or "2026-01-01",
         "start": start or "2026-01-01",
@@ -117,7 +116,7 @@ class StoreTests(unittest.TestCase):
         self.dir.cleanup()
 
     def add(self, **kwargs):
-        payload = {"name": "Mop the floor", "area": "Kitchen", "points": 10,
+        payload = {"name": "Mop the floor", "area": "Kitchen",
                    "recurrence": {"type": "days", "every": 2}}
         payload.update(kwargs)
         return self.store.upsert(payload)
@@ -129,25 +128,21 @@ class StoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.add(name="   ")
 
-    def test_complete_awards_xp_and_logs_it(self):
+    def test_complete_logs_it_and_stamps_the_date(self):
         task = self.add()
-        before = self.store.state["xp"]
         self.store.complete(task["id"])
-        self.assertEqual(self.store.state["xp"], before + 10)
         self.assertEqual(self.store.state["log"][0]["task_id"], task["id"])
         self.assertEqual(self.store.find(task["id"])["last_completed"],
                          date.today().isoformat())
 
-    def test_undo_restores_xp_due_date_and_streak(self):
+    def test_undo_restores_due_date_and_streak(self):
         task = self.add()
-        before_xp = self.store.state["xp"]
         before_due = server.compute_next_due(task)
 
         self.store.complete(task["id"])
         self.store.undo(task["id"])
 
         restored = self.store.find(task["id"])
-        self.assertEqual(self.store.state["xp"], before_xp)
         self.assertIsNone(restored["last_completed"])
         self.assertEqual(restored["streak"], 0)
         self.assertEqual(server.compute_next_due(restored), before_due)
@@ -205,12 +200,12 @@ class StoreTests(unittest.TestCase):
     def test_update_keeps_history_and_identity(self):
         task = self.add()
         self.store.complete(task["id"])
-        updated = self.store.upsert({"name": "Mop it well", "area": "Hall", "points": 25,
+        updated = self.store.upsert({"name": "Mop it well", "area": "Hall",
                                      "recurrence": {"type": "weekly", "days": [0]}},
                                     task["id"])
         self.assertEqual(updated["id"], task["id"])
+        self.assertEqual(updated["name"], "Mop it well")
         self.assertEqual(updated["completions"], 1)
-        self.assertEqual(updated["points"], 25)
 
     def test_delete_removes_the_task(self):
         task = self.add()
@@ -224,11 +219,48 @@ class StoreTests(unittest.TestCase):
         self.store.complete(task["id"])
         reopened = server.Store(self.store.path)
         self.assertEqual(reopened.find(task["id"])["name"], "Feed the chickens")
-        self.assertEqual(reopened.state["xp"], self.store.state["xp"])
+        self.assertEqual(len(reopened.state["log"]), len(self.store.state["log"]))
+
+    def test_no_scoring_fields_anywhere(self):
+        """Points and XP were removed; nothing should reintroduce them."""
+        task = self.add(points=99)          # a stale client must not revive it
+        self.store.complete(task["id"])
+        self.assertNotIn("points", task)
+        self.assertNotIn("xp", self.store.state)
+        self.assertNotIn("points", self.store.state["log"][0])
+        snap = self.store.snapshot()
+        self.assertNotIn("xp", snap)
+        self.assertNotIn("points", snap["tasks"][0])
+
+    def test_old_data_files_are_migrated(self):
+        """A file written by the scoring era loads with those keys dropped."""
+        legacy = {
+            "version": 1,
+            "xp": 460,
+            "tasks": [{"id": "task_old", "name": "Old chore", "area": "Kitchen",
+                       "points": 25, "recurrence": {"type": "days", "every": 2},
+                       "created": "2026-01-01", "start": "2026-01-01",
+                       "last_completed": None, "streak": 3, "completions": 7,
+                       "archived": False}],
+            "log": [{"id": "log_old", "task_id": "task_old", "name": "Old chore",
+                     "area": "Kitchen", "points": 25, "date": "2026-01-01", "ts": 0}],
+        }
+        path = os.path.join(self.dir.name, "legacy.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(legacy, handle)
+
+        store = server.Store(path)
+        self.assertNotIn("xp", store.state)
+        self.assertNotIn("points", store.state["tasks"][0])
+        self.assertNotIn("points", store.state["log"][0])
+        # everything worth keeping survives
+        self.assertEqual(store.state["tasks"][0]["streak"], 3)
+        self.assertEqual(store.state["tasks"][0]["completions"], 7)
+        self.assertEqual(store.state["tasks"][0]["name"], "Old chore")
 
     def test_snapshot_shape(self):
         snap = self.store.snapshot()
-        for key in ("today", "tasks", "log", "xp", "areas"):
+        for key in ("today", "tasks", "log", "areas"):
             self.assertIn(key, snap)
         self.assertIn("schedule_text", snap["tasks"][0])
         self.assertIn("next_due", snap["tasks"][0])
@@ -283,7 +315,7 @@ class ApiTests(unittest.TestCase):
 
     def test_full_task_lifecycle(self):
         status, created = self.call("POST", "/api/tasks", {
-            "name": "Polish the diamonds", "area": "Vault", "points": 40,
+            "name": "Polish the diamonds", "area": "Vault",
             "recurrence": {"type": "days", "every": 5}})
         self.assertEqual(status, 200)
         task_id = created["task"]["id"]
@@ -301,7 +333,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
 
         status, edited = self.call("POST", "/api/tasks/" + task_id, {
-            "name": "Polish the emeralds", "area": "Vault", "points": 40,
+            "name": "Polish the emeralds", "area": "Vault",
             "recurrence": {"type": "monthly", "day": 2}})
         self.assertEqual(edited["task"]["name"], "Polish the emeralds")
 

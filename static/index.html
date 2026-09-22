@@ -25,14 +25,7 @@
   <div class="hud">
     <div class="hud-row">
       <h1 class="logo"><span class="pick">&#9874;</span> BlockChores</h1>
-      <div class="hud-stats">
-        <div>LEVEL <b id="hud-level">0</b></div>
-        <div id="hud-left">&nbsp;</div>
-      </div>
-    </div>
-    <div class="xp">
-      <div class="xp-fill" id="xp-fill"></div>
-      <div class="xp-text" id="xp-text">0 XP</div>
+      <div class="hud-stats" id="hud-left">&nbsp;</div>
     </div>
   </div>
 
@@ -93,24 +86,14 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="col">
-        <div class="field">
-          <label for="f-type">Repeats</label>
-          <select id="f-type">
-            <option value="days">Every N days</option>
-            <option value="weekly">Certain weekdays</option>
-            <option value="monthly">Monthly</option>
-            <option value="once">One time only</option>
-          </select>
-        </div>
-      </div>
-      <div class="col">
-        <div class="field">
-          <label for="f-points">XP reward</label>
-          <input type="number" id="f-points" min="0" max="500" step="5" value="10">
-        </div>
-      </div>
+    <div class="field">
+      <label for="f-type">Repeats</label>
+      <select id="f-type">
+        <option value="days">Every N days</option>
+        <option value="weekly">Certain weekdays</option>
+        <option value="monthly">Monthly</option>
+        <option value="once">One time only</option>
+      </select>
     </div>
 
     <div class="field" id="wrap-days">
