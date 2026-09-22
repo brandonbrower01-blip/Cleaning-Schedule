@@ -222,8 +222,9 @@ body {
 
 .tab {
   -webkit-box-flex: 1;
-  -webkit-flex: 1 1 0;
-  flex: 1 1 0;
+  /* 0% not 0: Safari 9 discards a shorthand with a unitless flex-basis */
+  -webkit-flex: 1 1 0%;
+  flex: 1 1 0%;
   margin-right: 6px;
   padding: 12px 4px;
   font: inherit;
@@ -640,8 +641,9 @@ textarea { height: 70px; }
 
 .modal-actions .btn {
   -webkit-box-flex: 1;
-  -webkit-flex: 1 1 0;
-  flex: 1 1 0;
+  /* 0% not 0: Safari 9 discards a shorthand with a unitless flex-basis */
+  -webkit-flex: 1 1 0%;
+  flex: 1 1 0%;
   margin-right: 6px;
 }
 

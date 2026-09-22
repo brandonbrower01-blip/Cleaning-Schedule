@@ -67,6 +67,12 @@ class StylesheetTests(unittest.TestCase):
             self.assertIsNone(re.search(pattern, self.css),
                               "%s does not work in Safari 9" % label)
 
+    def test_flex_basis_always_carries_a_unit(self):
+        """Safari 9 discards a flex shorthand whose basis is a unitless zero,
+        which would leave those items sized to their content."""
+        offenders = re.findall(r"flex:\s*\d+\s+\d+\s+0\s*;", self.css)
+        self.assertEqual(offenders, [], "use 0%% instead: %r" % offenders)
+
     def test_flexbox_keeps_its_webkit_prefixes(self):
         self.assertIn("display: -webkit-flex", self.css)
         self.assertIn("-webkit-flex:", self.css)

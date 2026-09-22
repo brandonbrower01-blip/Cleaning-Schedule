@@ -454,17 +454,20 @@ class Handler(BaseHTTPRequestHandler):
 
     # -- plumbing ---------------------------------------------------------
 
-    def send_json(self, payload, status=200):
+    def send_json(self, payload, status=200, with_body=True):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
-        self.wfile.write(body)
+        # A HEAD must not carry one: on a keep-alive connection a stray body
+        # is read as the start of the next response.
+        if with_body:
+            self.wfile.write(body)
 
-    def send_error_json(self, status, message):
-        self.send_json({"ok": False, "error": message}, status)
+    def send_error_json(self, status, message, with_body=True):
+        self.send_json({"ok": False, "error": message}, status, with_body)
 
     def read_json(self):
         length = int(self.headers.get("Content-Length") or 0)
@@ -494,7 +497,7 @@ class Handler(BaseHTTPRequestHandler):
     def serve_static(self, path, with_body=True):
         target = self.resolve_static(path)
         if target is None:
-            self.send_error_json(404, "Not found")
+            self.send_error_json(404, "Not found", with_body)
             return
 
         ctype, _ = mimetypes.guess_type(target)

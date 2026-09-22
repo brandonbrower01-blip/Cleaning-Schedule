@@ -309,6 +309,29 @@ class ApiTests(unittest.TestCase):
                 self.assertEqual(res.status, 200, path)
                 self.assertIn(expected, res.headers.get("Content-Type", ""), path)
 
+    def test_head_requests_send_no_body(self):
+        """A stray body on a HEAD corrupts the next reply on a kept-alive
+        connection, which is how Safari talks to the server."""
+        import http.client
+        conn = http.client.HTTPConnection("127.0.0.1", self.httpd.server_address[1], timeout=10)
+
+        conn.request("HEAD", "/index.html")
+        res = conn.getresponse()
+        self.assertEqual(res.status, 200)
+        self.assertEqual(res.read(), b"")
+
+        conn.request("HEAD", "/nope.html")
+        res = conn.getresponse()
+        self.assertEqual(res.status, 404)
+        self.assertEqual(res.read(), b"")
+
+        # the connection must still be usable and correctly framed
+        conn.request("GET", "/api/state")
+        res = conn.getresponse()
+        self.assertEqual(res.status, 200)
+        self.assertTrue(json.loads(res.read().decode())["ok"])
+        conn.close()
+
     def test_directory_traversal_is_refused(self):
         status, _ = self.call("GET", "/../server.py")
         self.assertEqual(status, 404)
