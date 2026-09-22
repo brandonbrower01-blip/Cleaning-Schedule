@@ -24,16 +24,17 @@ green, dirt brown and white, in beveled blocks.
 
 ## Running it
 
-No dependencies beyond Python 3 — nothing to `pip install`.
+Nothing to `pip install` — it needs only Python 3, which Debian already has.
 
 ```sh
-git clone https://github.com/brandonbrower01-blip/cleaning-schedule.git
-cd cleaning-schedule
+sudo apt install -y git python3
+git clone https://github.com/brandonbrower01-blip/Cleaning-Schedule.git
+cd Cleaning-Schedule
 python3 server.py --port 8080
 ```
 
 Then open `http://<server-ip>:8080/` on the iPad. The first run seeds a starter
-list of chores you can edit or delete.
+list of chores you can edit or delete. Ctrl-C stops it.
 
 Options:
 
@@ -45,28 +46,64 @@ Options:
 
 ## Installing on Debian 13
 
+To have it start on boot and stay up, install it as a service:
+
 ```sh
 sudo sh deploy/install.sh
 ```
 
-That copies the app to `/opt/blockchores`, installs
-`deploy/blockchores.service`, and starts it on port 8080. The service runs under
-a systemd `DynamicUser` with its data in `/var/lib/blockchores` — no user
-account to create, nothing writable outside that directory.
+That copies the app to `/opt/blockchores`, writes
+`/etc/systemd/system/blockchores.service`, and starts it on port 8080. It
+prints the exact URL to open on the iPad when it finishes. The service runs
+under a systemd `DynamicUser` with its data in `/var/lib/blockchores` — there
+is no account to create, and nothing outside that directory is writable.
+
+Use a different port with `sudo PORT=80 sh deploy/install.sh`.
 
 ```sh
 systemctl status blockchores      # is it up
 journalctl -u blockchores -f      # watch the log
+sudo systemctl restart blockchores
 ```
 
-If you want it on port 80 or behind a name like `http://chores.lan/`, there's an
-nginx site in `deploy/nginx-blockchores.conf`.
+Find the server's address with `hostname -I`. Worth giving the machine a static
+address or a DHCP reservation, so the iPad's bookmark keeps working.
 
-Allowing the iPad through the firewall, if you run one:
+### Updating later
+
+```sh
+cd Cleaning-Schedule
+git pull
+sudo sh deploy/install.sh
+```
+
+Re-running the installer replaces the code and restarts the service. Your
+chores are in `/var/lib/blockchores` and are never touched by it.
+
+### Firewall
+
+If you run one, let the house in but nothing else:
 
 ```sh
 sudo ufw allow from 192.168.0.0/16 to any port 8080 proto tcp
 ```
+
+There is no login, so keep it to the LAN. Anyone who can reach the port can
+edit the chore list.
+
+### A friendlier address
+
+To reach it at `http://chores.lan/` instead of an IP and port, there is an nginx
+site in `deploy/nginx-blockchores.conf`:
+
+```sh
+sudo apt install -y nginx
+sudo cp deploy/nginx-blockchores.conf /etc/nginx/sites-available/blockchores
+sudo ln -s /etc/nginx/sites-available/blockchores /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+The name itself has to come from your router's DNS or the iPad's hosts file.
 
 ### Backups
 
@@ -77,6 +114,16 @@ sudo cp /var/lib/blockchores/chores.json ~/chores-backup-$(date +%F).json
 ```
 
 The server also keeps the previous version as `chores.json.bak` after each write.
+
+### Uninstalling
+
+```sh
+sudo systemctl disable --now blockchores
+sudo rm /etc/systemd/system/blockchores.service
+sudo systemctl daemon-reload
+sudo rm -rf /opt/blockchores
+sudo rm -rf /var/lib/blockchores     # this deletes your chore history
+```
 
 ## On the iPad
 
