@@ -1,0 +1,821 @@
+/* BlockChores - earthy Minecraft theme.
+   Targets Safari on iOS 9 (1st gen iPad mini): no CSS grid, no custom
+   properties, no position:sticky, everything prefixed where it matters. */
+
+/* ---------- palette ----------------------------------------------------
+   sky    #8cc6f0   grass  #6aae45   dirt  #866043   stone #c6c6c6
+   white  #ffffff   deep   #3f6b28   bark  #4a3323   gold  #ffd45c        */
+
+* {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: "Lucida Console", Monaco, "Courier New", Courier, monospace;
+  font-size: 15px;
+  line-height: 1.35;
+  color: #2b2118;
+  background-color: #8cc6f0;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ---------- sky + clouds ---------------------------------------------- */
+
+#sky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background-color: #8cc6f0;
+  background-image: -webkit-linear-gradient(top, #a5d6f5 0%, #8cc6f0 55%, #bfe0c4 100%);
+  background-image: linear-gradient(to bottom, #a5d6f5 0%, #8cc6f0 55%, #bfe0c4 100%);
+  overflow: hidden;
+}
+
+/* Clouds are drawn as stacked blocks so they stay pixel-square. */
+.cloud {
+  position: absolute;
+  width: 96px;
+  height: 16px;
+  background: #ffffff;
+  opacity: 0.85;
+  -webkit-box-shadow:
+    16px -16px 0 0 #ffffff,
+    32px -16px 0 0 #ffffff,
+    48px -16px 0 0 #ffffff,
+    32px -32px 0 0 #ffffff,
+    -16px 16px 0 0 #ffffff,
+    64px 16px 0 0 #ffffff;
+  box-shadow:
+    16px -16px 0 0 #ffffff,
+    32px -16px 0 0 #ffffff,
+    48px -16px 0 0 #ffffff,
+    32px -32px 0 0 #ffffff,
+    -16px 16px 0 0 #ffffff,
+    64px 16px 0 0 #ffffff;
+  -webkit-animation: drift 140s linear infinite;
+  animation: drift 140s linear infinite;
+}
+
+.cloud-1 { top: 70px;  left: -220px; }
+.cloud-2 { top: 190px; left: -420px; -webkit-animation-duration: 200s; animation-duration: 200s; }
+.cloud-3 { top: 330px; left: -700px; -webkit-animation-duration: 260s; animation-duration: 260s; opacity: 0.6; }
+
+@-webkit-keyframes drift {
+  from { -webkit-transform: translate3d(0, 0, 0); }
+  to   { -webkit-transform: translate3d(1500px, 0, 0); }
+}
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(1500px, 0, 0); }
+}
+
+/* ---------- blocky surfaces ------------------------------------------- */
+
+/* The classic Minecraft bevel: light top/left, dark bottom/right. */
+.block {
+  border: 4px solid;
+  border-top-color: #b99a6b;
+  border-left-color: #b99a6b;
+  border-right-color: #4a3323;
+  border-bottom-color: #4a3323;
+  background-color: #866043;
+}
+
+.panel {
+  position: relative;
+  margin: 0 0 14px 0;
+  padding: 12px;
+  background-color: #f4f1e6;
+  background-image:
+    -webkit-linear-gradient(top, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 100%);
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 100%);
+  border: 4px solid;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-right-color: #8d876f;
+  border-bottom-color: #8d876f;
+  -webkit-box-shadow: 0 6px 0 rgba(43, 33, 24, 0.25);
+  box-shadow: 0 6px 0 rgba(43, 33, 24, 0.25);
+}
+
+/* ---------- header ----------------------------------------------------- */
+
+#shell {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 12px 60px 12px;
+}
+
+.hud {
+  position: relative;
+  margin: 0 -12px 12px -12px;
+  padding: 34px 14px 14px 14px;
+  background-color: #866043;
+  background-image:
+    -webkit-repeating-linear-gradient(45deg, rgba(74, 51, 35, 0.16) 0px, rgba(74, 51, 35, 0.16) 4px,
+                                      rgba(0, 0, 0, 0) 4px, rgba(0, 0, 0, 0) 8px);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(74, 51, 35, 0.16) 0px, rgba(74, 51, 35, 0.16) 4px,
+                              rgba(0, 0, 0, 0) 4px, rgba(0, 0, 0, 0) 8px);
+  border-bottom: 5px solid #4a3323;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+/* The grass cap of the block. */
+.hud:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background-color: #6aae45;
+  background-image:
+    -webkit-repeating-linear-gradient(90deg, rgba(63, 107, 40, 0.35) 0px, rgba(63, 107, 40, 0.35) 4px,
+                                      rgba(0, 0, 0, 0) 4px, rgba(0, 0, 0, 0) 12px);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(63, 107, 40, 0.35) 0px, rgba(63, 107, 40, 0.35) 4px,
+                              rgba(0, 0, 0, 0) 4px, rgba(0, 0, 0, 0) 12px);
+}
+
+/* The ragged line where the grass crumbles into the dirt. */
+.hud:after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-image:
+    -webkit-repeating-linear-gradient(left, #5d9c3c 0px, #5d9c3c 8px,
+                                      rgba(0, 0, 0, 0) 8px, rgba(0, 0, 0, 0) 24px);
+  background-image:
+    repeating-linear-gradient(to right, #5d9c3c 0px, #5d9c3c 8px,
+                              rgba(0, 0, 0, 0) 8px, rgba(0, 0, 0, 0) 24px);
+}
+
+.hud-row {
+  position: relative;
+  z-index: 1;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.logo {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 3px 3px 0 #2f4a1d;
+}
+
+.logo .pick { color: #ffd45c; }
+
+.hud-stats {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 0 #3d2c1e;
+}
+
+.hud-stats b { font-size: 16px; color: #ffd45c; }
+
+/* XP bar, straight out of the game HUD. */
+.xp {
+  position: relative;
+  z-index: 1;
+  height: 16px;
+  margin-top: 8px;
+  background-color: #3d2c1e;
+  border: 3px solid #241a12;
+  overflow: hidden;
+}
+
+.xp-fill {
+  height: 100%;
+  width: 0;
+  background-color: #7fe02a;
+  background-image: -webkit-linear-gradient(top, #a6f24f 0%, #5bc218 100%);
+  background-image: linear-gradient(to bottom, #a6f24f 0%, #5bc218 100%);
+}
+
+.xp-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  line-height: 14px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  /* Four offsets fake an outline, so the text reads over the bright fill
+     as well as the dark track behind it. */
+  text-shadow: 1px 1px 0 #1d1510, -1px 1px 0 #1d1510,
+               1px -1px 0 #1d1510, -1px -1px 0 #1d1510;
+}
+
+/* ---------- tabs -------------------------------------------------------- */
+
+.tabs {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  margin: 0 0 14px 0;
+}
+
+.tab {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 0;
+  flex: 1 1 0;
+  margin-right: 6px;
+  padding: 12px 4px;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #2b2118;
+  background-color: #c9c9c9;
+  border: 4px solid;
+  border-top-color: #efefef;
+  border-left-color: #efefef;
+  border-right-color: #6f6f6f;
+  border-bottom-color: #6f6f6f;
+  cursor: pointer;
+}
+
+.tab:last-child { margin-right: 0; }
+
+.tab.is-active {
+  color: #ffffff;
+  background-color: #6aae45;
+  border-top-color: #93cf70;
+  border-left-color: #93cf70;
+  border-right-color: #3f6b28;
+  border-bottom-color: #3f6b28;
+  text-shadow: 2px 2px 0 #35591f;
+}
+
+/* ---------- buttons ----------------------------------------------------- */
+
+.btn {
+  display: inline-block;
+  padding: 12px 16px;
+  min-height: 44px;              /* comfortable target for fingers */
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #ffffff;
+  background-color: #7b7b7b;
+  border: 4px solid;
+  border-top-color: #a8a8a8;
+  border-left-color: #a8a8a8;
+  border-right-color: #4f4f4f;
+  border-bottom-color: #4f4f4f;
+  text-shadow: 2px 2px 0 #3a3a3a;
+  cursor: pointer;
+}
+
+.btn:active {
+  border-top-color: #4f4f4f;
+  border-left-color: #4f4f4f;
+  border-right-color: #a8a8a8;
+  border-bottom-color: #a8a8a8;
+}
+
+.btn-green {
+  background-color: #6aae45;
+  border-top-color: #93cf70;
+  border-left-color: #93cf70;
+  border-right-color: #3f6b28;
+  border-bottom-color: #3f6b28;
+  text-shadow: 2px 2px 0 #35591f;
+}
+
+.btn-green:active {
+  border-top-color: #3f6b28;
+  border-left-color: #3f6b28;
+  border-right-color: #93cf70;
+  border-bottom-color: #93cf70;
+}
+
+.btn-brown {
+  background-color: #8a6444;
+  border-top-color: #b08a63;
+  border-left-color: #b08a63;
+  border-right-color: #4a3323;
+  border-bottom-color: #4a3323;
+  text-shadow: 2px 2px 0 #402d1e;
+}
+
+.btn-red {
+  background-color: #b3462f;
+  border-top-color: #d47058;
+  border-left-color: #d47058;
+  border-right-color: #6f2416;
+  border-bottom-color: #6f2416;
+  text-shadow: 2px 2px 0 #571c11;
+}
+
+.btn-small {
+  padding: 8px 10px;
+  min-height: 0;
+  font-size: 11px;
+  border-width: 3px;
+}
+
+.btn-wide { display: block; width: 100%; }
+
+/* ---------- task list --------------------------------------------------- */
+
+.section-title {
+  margin: 0 0 8px 0;
+  padding: 6px 10px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background-color: #4a3323;
+  border-left: 6px solid #6aae45;
+  text-shadow: 2px 2px 0 #241a12;
+}
+
+.section-title .count {
+  float: right;
+  color: #ffd45c;
+}
+
+.section-overdue .section-title { border-left-color: #b3462f; }
+.section-later .section-title { border-left-color: #8cc6f0; }
+
+.empty {
+  padding: 14px;
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: #4a3323;
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 4px dashed #b99a6b;
+}
+
+.task {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #f4f1e6;
+  border: 4px solid;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-right-color: #9a9581;
+  border-bottom-color: #9a9581;
+}
+
+.task.is-overdue { background-color: #f6ded6; }
+.task.is-done { background-color: #e2efd8; opacity: 0.75; }
+
+/* The check box is a crafting-table slot you tap. */
+.checkbox {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  margin-right: 10px;
+  padding: 0;
+  font: inherit;
+  font-size: 26px;
+  line-height: 40px;
+  text-align: center;
+  color: #3f6b28;
+  background-color: #8b8b8b;
+  border: 3px solid;
+  border-top-color: #373737;
+  border-left-color: #373737;
+  border-right-color: #ffffff;
+  border-bottom-color: #ffffff;
+  cursor: pointer;
+}
+
+.checkbox.is-checked {
+  color: #ffffff;
+  background-color: #6aae45;
+  border-top-color: #3f6b28;
+  border-left-color: #3f6b28;
+  border-right-color: #93cf70;
+  border-bottom-color: #93cf70;
+}
+
+.task-body {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.task-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2b2118;
+  word-wrap: break-word;
+}
+
+.task.is-done .task-name {
+  text-decoration: line-through;
+  color: #5c6b4c;
+}
+
+.task-meta {
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #6b5a47;
+}
+
+.task-notes {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b5a47;
+  font-style: italic;
+}
+
+.chip {
+  display: inline-block;
+  margin: 2px 4px 2px 0;
+  padding: 2px 6px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background-color: #8a6444;
+}
+
+.chip-area { background-color: #6aae45; }
+.chip-due { background-color: #7b7b7b; }
+.chip-late { background-color: #b3462f; }
+.chip-who { background-color: #4c86b3; }
+.chip-streak { background-color: #d9a021; color: #40300a; }
+
+.task-actions {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-left: 8px;
+  text-align: right;
+}
+
+.task-actions .btn { margin-left: 4px; }
+
+/* ---------- filters ----------------------------------------------------- */
+
+.filters {
+  margin-bottom: 12px;
+}
+
+.filter {
+  display: inline-block;
+  margin: 0 6px 6px 0;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #2b2118;
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 3px solid;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-right-color: #8d876f;
+  border-bottom-color: #8d876f;
+  cursor: pointer;
+}
+
+.filter.is-active {
+  color: #ffffff;
+  background-color: #4a3323;
+  border-top-color: #7d5f44;
+  border-left-color: #7d5f44;
+  border-right-color: #241a12;
+  border-bottom-color: #241a12;
+}
+
+/* ---------- forms ------------------------------------------------------- */
+
+.field { margin-bottom: 12px; }
+
+.field label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #4a3323;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font: inherit;
+  font-size: 16px;            /* 16px stops iOS zooming the page on focus */
+  color: #2b2118;
+  background-color: #ffffff;
+  border: 3px solid;
+  border-top-color: #8d876f;
+  border-left-color: #8d876f;
+  border-right-color: #ffffff;
+  border-bottom-color: #ffffff;
+  -webkit-border-radius: 0;
+  border-radius: 0;
+  -webkit-appearance: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+textarea { height: 70px; }
+
+.row {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 -6px;
+}
+
+.col {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 140px;
+  flex: 1 1 140px;
+  padding: 0 6px;
+}
+
+.daypicker { display: block; }
+
+.day {
+  display: inline-block;
+  width: 44px;
+  margin: 0 4px 4px 0;
+  padding: 10px 0;
+  font: inherit;
+  font-size: 11px;
+  text-align: center;
+  color: #2b2118;
+  background-color: #dedad0;
+  border: 3px solid;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-right-color: #8d876f;
+  border-bottom-color: #8d876f;
+  cursor: pointer;
+}
+
+.day.is-on {
+  color: #ffffff;
+  background-color: #6aae45;
+  border-top-color: #93cf70;
+  border-left-color: #93cf70;
+  border-right-color: #3f6b28;
+  border-bottom-color: #3f6b28;
+}
+
+.hint {
+  margin: 4px 0 0 0;
+  font-size: 11px;
+  color: #6b5a47;
+}
+
+/* ---------- modal ------------------------------------------------------- */
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 20px 12px;
+  background-color: rgba(20, 14, 9, 0.7);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal.is-open { display: block; }
+
+.modal-box {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 14px;
+  background-color: #f4f1e6;
+  border: 5px solid;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-right-color: #7d7761;
+  border-bottom-color: #7d7761;
+}
+
+.modal-title {
+  margin: -14px -14px 14px -14px;
+  padding: 10px 14px;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background-color: #4a3323;
+  text-shadow: 2px 2px 0 #241a12;
+}
+
+.modal-actions {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  margin-top: 6px;
+}
+
+.modal-actions .btn {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 0;
+  flex: 1 1 0;
+  margin-right: 6px;
+}
+
+.modal-actions .btn:last-child { margin-right: 0; }
+
+/* ---------- history ----------------------------------------------------- */
+
+.log-day {
+  margin: 0 0 6px 0;
+  padding: 5px 8px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  background-color: #6b5a47;
+}
+
+.log-entry {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-left: 5px solid #6aae45;
+}
+
+.log-entry .pts {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 12px;
+  color: #3f6b28;
+  font-weight: bold;
+}
+
+.stat-row {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 -4px 10px -4px;
+}
+
+.stat {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 110px;
+  flex: 1 1 110px;
+  margin: 0 4px 8px 4px;
+  padding: 10px 6px;
+  text-align: center;
+  background-color: #4a3323;
+  border: 3px solid;
+  border-top-color: #7d5f44;
+  border-left-color: #7d5f44;
+  border-right-color: #241a12;
+  border-bottom-color: #241a12;
+  color: #f4f1e6;
+}
+
+.stat b {
+  display: block;
+  font-size: 22px;
+  color: #ffd45c;
+  text-shadow: 2px 2px 0 #241a12;
+}
+
+.stat span {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ---------- toast + status ---------------------------------------------- */
+
+#toast {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 80;
+  text-align: center;
+  pointer-events: none;
+}
+
+#toast.is-up { display: block; }
+
+#toast span {
+  display: inline-block;
+  padding: 10px 16px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  background-color: #4a3323;
+  border: 3px solid;
+  border-top-color: #7d5f44;
+  border-left-color: #7d5f44;
+  border-right-color: #241a12;
+  border-bottom-color: #241a12;
+  text-shadow: 2px 2px 0 #241a12;
+}
+
+#offline {
+  display: none;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  background-color: #b3462f;
+  border: 3px solid #6f2416;
+}
+
+#offline.is-up { display: block; }
+
+.view { display: none; }
+.view.is-active { display: block; }
+
+.footer {
+  margin-top: 20px;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #3f5a2c;
+}
+
+/* ---------- small screens ----------------------------------------------- */
+
+@media (max-width: 700px) {
+  .logo { font-size: 17px; }
+  .task-actions .btn { margin: 2px 0 0 4px; }
+  .checkbox { width: 40px; height: 40px; line-height: 34px; font-size: 22px; }
+}

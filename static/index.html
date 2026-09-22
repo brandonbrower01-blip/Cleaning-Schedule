@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BlockChores</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="BlockChores">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icons/icon-152.png">
+<link rel="icon" href="icons/icon-32.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="sky">
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+  <div class="cloud cloud-3"></div>
+</div>
+
+<div id="shell">
+
+  <div class="hud">
+    <div class="hud-row">
+      <h1 class="logo"><span class="pick">&#9874;</span> BlockChores</h1>
+      <div class="hud-stats">
+        <div>LEVEL <b id="hud-level">0</b></div>
+        <div id="hud-left">&nbsp;</div>
+      </div>
+    </div>
+    <div class="xp">
+      <div class="xp-fill" id="xp-fill"></div>
+      <div class="xp-text" id="xp-text">0 XP</div>
+    </div>
+  </div>
+
+  <div id="offline">SERVER OFFLINE &mdash; showing the last saved copy. Changes will not stick.</div>
+
+  <div class="tabs">
+    <button class="tab is-active" type="button" data-action="tab" data-view="today">Today</button>
+    <button class="tab" type="button" data-action="tab" data-view="tasks">All Tasks</button>
+    <button class="tab" type="button" data-action="tab" data-view="history">History</button>
+  </div>
+
+  <!-- ---------------- today ---------------- -->
+  <div class="view is-active" id="view-today">
+    <div class="filters" id="filters"></div>
+    <div id="today-body"></div>
+  </div>
+
+  <!-- ---------------- all tasks ---------------- -->
+  <div class="view" id="view-tasks">
+    <button class="btn btn-green btn-wide" type="button" data-action="new" style="margin-bottom:14px;">
+      + Craft a new task
+    </button>
+    <div id="tasks-body"></div>
+  </div>
+
+  <!-- ---------------- history ---------------- -->
+  <div class="view" id="view-history">
+    <div class="stat-row" id="stats"></div>
+    <div id="history-body"></div>
+  </div>
+
+  <div class="footer">BlockChores &mdash; keep the base tidy</div>
+</div>
+
+<!-- ---------------- editor ---------------- -->
+<div class="modal" id="editor">
+  <div class="modal-box">
+    <div class="modal-title" id="editor-title">New task</div>
+
+    <div class="field">
+      <label for="f-name">Task name</label>
+      <input type="text" id="f-name" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="Scrub the cobblestone">
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="field">
+          <label for="f-area">Room / area</label>
+          <input type="text" id="f-area" autocomplete="off" placeholder="Kitchen">
+        </div>
+      </div>
+      <div class="col">
+        <div class="field">
+          <label for="f-assignee">Assigned to (optional)</label>
+          <input type="text" id="f-assignee" autocomplete="off" placeholder="Steve">
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="field">
+          <label for="f-type">Repeats</label>
+          <select id="f-type">
+            <option value="days">Every N days</option>
+            <option value="weekly">Certain weekdays</option>
+            <option value="monthly">Monthly</option>
+            <option value="once">One time only</option>
+          </select>
+        </div>
+      </div>
+      <div class="col">
+        <div class="field">
+          <label for="f-points">XP reward</label>
+          <input type="number" id="f-points" min="0" max="500" step="5" value="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="wrap-days">
+      <label for="f-every">Repeat every &hellip; days</label>
+      <input type="number" id="f-every" min="1" max="3650" step="1" value="7">
+      <p class="hint">Counts from the day you last checked it off.</p>
+    </div>
+
+    <div class="field" id="wrap-weekly">
+      <label>On these days</label>
+      <div class="daypicker" id="f-weekdays">
+        <button class="day" type="button" data-action="weekday" data-day="0">Sun</button
+        ><button class="day" type="button" data-action="weekday" data-day="1">Mon</button
+        ><button class="day" type="button" data-action="weekday" data-day="2">Tue</button
+        ><button class="day" type="button" data-action="weekday" data-day="3">Wed</button
+        ><button class="day" type="button" data-action="weekday" data-day="4">Thu</button
+        ><button class="day" type="button" data-action="weekday" data-day="5">Fri</button
+        ><button class="day" type="button" data-action="weekday" data-day="6">Sat</button>
+      </div>
+    </div>
+
+    <div class="field" id="wrap-monthly">
+      <label for="f-dom">Day of the month</label>
+      <input type="number" id="f-dom" min="1" max="31" step="1" value="1">
+      <p class="hint">Short months fall back to the last day.</p>
+    </div>
+
+    <div class="field" id="wrap-once">
+      <label for="f-date">Do it on</label>
+      <input type="date" id="f-date">
+    </div>
+
+    <div class="field" id="wrap-start">
+      <label for="f-start">First due on</label>
+      <input type="date" id="f-start">
+      <p class="hint">Only used until the task has been checked off once.</p>
+    </div>
+
+    <div class="field">
+      <label for="f-notes">Notes (optional)</label>
+      <textarea id="f-notes" placeholder="Use the good sponge"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-green" type="button" data-action="save">Save</button>
+      <button class="btn" type="button" data-action="close">Cancel</button>
+    </div>
+    <div class="modal-actions" id="editor-delete-row" style="margin-top:10px;">
+      <button class="btn btn-red" type="button" data-action="delete">Delete this task</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span></span></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# BlockChores - systemd unit for Debian 13 (bookworm/trixie era systemd).
+#
+#   sudo cp deploy/blockchores.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now blockchores
+#
+# DynamicUser gives the service its own throwaway account, and StateDirectory
+# creates /var/lib/blockchores owned by it - no user to make by hand.
+
+[Unit]
+Description=BlockChores household cleaning schedule
+Documentation=https://github.com/brandonbrower01-blip/cleaning-schedule
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+DynamicUser=yes
+StateDirectory=blockchores
+WorkingDirectory=/opt/blockchores
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/blockchores/server.py --host 0.0.0.0 --port 8080 --data /var/lib/blockchores
+Restart=on-failure
+RestartSec=3
+
+# It only needs to read its own code and write its own data.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target
