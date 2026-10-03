@@ -558,6 +558,8 @@ textarea { height: 70px; }
 
 .daypicker { display: block; }
 
+.field .sub-label { margin-top: 12px; }
+
 .day {
   display: inline-block;
   width: 44px;

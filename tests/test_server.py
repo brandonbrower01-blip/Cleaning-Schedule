@@ -63,6 +63,46 @@ class RecurrenceTests(unittest.TestCase):
         task = make_task({"type": "weekly", "days": [2]}, last_completed="2026-03-10")
         self.assertEqual(server.compute_next_due(task), "2026-03-17")
 
+    def test_fortnightly_stays_on_the_same_weekday(self):
+        # done Sunday 2026-10-04, every other Sunday -> 2026-10-18, not the 11th
+        task = make_task({"type": "weekly", "days": [0], "weeks": 2},
+                         last_completed="2026-10-04")
+        self.assertEqual(server.compute_next_due(task), "2026-10-18")
+
+    def test_fortnightly_returns_to_sunday_after_a_late_finish(self):
+        """Doing it on the Tuesday must not drag the schedule off Sunday."""
+        task = make_task({"type": "weekly", "days": [0], "weeks": 2},
+                         last_completed="2026-10-06")   # a Tuesday
+        due = server.compute_next_due(task)
+        self.assertEqual(server.sunday_weekday(server.parse_date(due)), 0)
+        self.assertEqual(due, "2026-10-18")
+
+    def test_a_new_fortnightly_task_is_due_at_the_next_occurrence(self):
+        """The two week gap starts after the first completion, not before."""
+        task = make_task({"type": "weekly", "days": [0], "weeks": 2},
+                         start="2026-10-01")            # a Thursday
+        self.assertEqual(server.compute_next_due(task), "2026-10-04")
+
+    def test_every_fourth_week(self):
+        task = make_task({"type": "weekly", "days": [0], "weeks": 4},
+                         last_completed="2026-10-04")
+        self.assertEqual(server.compute_next_due(task), "2026-11-01")
+
+    def test_twice_weekly_alternates_between_its_days(self):
+        # Sunday and Wednesday: done Sunday -> Wednesday, done Wednesday -> Sunday
+        sunday = make_task({"type": "weekly", "days": [0, 3]}, last_completed="2026-10-04")
+        self.assertEqual(server.compute_next_due(sunday), "2026-10-07")
+        wednesday = make_task({"type": "weekly", "days": [0, 3]}, last_completed="2026-10-07")
+        self.assertEqual(server.compute_next_due(wednesday), "2026-10-11")
+
+    def test_week_interval_is_clamped(self):
+        self.assertEqual(server.clean_recurrence(
+            {"type": "weekly", "days": [0], "weeks": 0})["weeks"], 1)
+        self.assertEqual(server.clean_recurrence(
+            {"type": "weekly", "days": [0], "weeks": 99})["weeks"], 8)
+        self.assertEqual(server.clean_recurrence(
+            {"type": "weekly", "days": [0], "weeks": "x"})["weeks"], 1)
+
     def test_monthly_rolls_to_next_month(self):
         task = make_task({"type": "monthly", "day": 1}, last_completed="2026-03-01")
         self.assertEqual(server.compute_next_due(task), "2026-04-01")
@@ -93,7 +133,7 @@ class RecurrenceTests(unittest.TestCase):
 
     def test_bad_input_is_normalised_rather_than_crashing(self):
         rec = server.clean_recurrence({"type": "weekly", "days": ["2", 9, None, 2]})
-        self.assertEqual(rec, {"type": "weekly", "days": [2]})
+        self.assertEqual(rec, {"type": "weekly", "days": [2], "weeks": 1})
         self.assertEqual(server.clean_recurrence({"type": "days", "every": -5}),
                          {"type": "days", "every": 1})
         self.assertEqual(server.clean_recurrence({"type": "monthly", "day": 99})["day"], 31)
@@ -103,6 +143,10 @@ class RecurrenceTests(unittest.TestCase):
         self.assertEqual(server.describe({"type": "days", "every": 1}), "Every day")
         self.assertEqual(server.describe({"type": "days", "every": 7}), "Every week")
         self.assertEqual(server.describe({"type": "weekly", "days": [1, 4]}), "Weekly: Mon, Thu")
+        self.assertEqual(server.describe({"type": "weekly", "days": [0], "weeks": 2}),
+                         "Every other week: Sun")
+        self.assertEqual(server.describe({"type": "weekly", "days": [0], "weeks": 3}),
+                         "Every 3 weeks: Sun")
         self.assertEqual(server.describe({"type": "monthly", "day": 3}), "Monthly on day 3")
 
 
@@ -121,8 +165,28 @@ class StoreTests(unittest.TestCase):
         payload.update(kwargs)
         return self.store.upsert(payload)
 
-    def test_seeded_with_starter_tasks(self):
-        self.assertTrue(len(self.store.state["tasks"]) > 5)
+    def test_seeded_with_the_household_schedule(self):
+        """The starter list is the actual chore schedule, so pin it down."""
+        expected = {
+            "Wash the dishes": {"type": "days", "every": 1},
+            "Clean off the table": {"type": "days", "every": 1},
+            "Vacuum": {"type": "weekly", "days": [0, 3], "weeks": 1},
+            "Sweep the kitchen": {"type": "weekly", "days": [0], "weeks": 1},
+            "Clean the stove top": {"type": "weekly", "days": [0], "weeks": 1},
+            "Dust": {"type": "weekly", "days": [0], "weeks": 1},
+            "Change the cat litter": {"type": "weekly", "days": [0], "weeks": 1},
+            "Clean the bathrooms": {"type": "weekly", "days": [0], "weeks": 2},
+        }
+        actual = {t["name"]: t["recurrence"] for t in self.store.state["tasks"]}
+        self.assertEqual(actual, expected)
+
+    def test_every_repeating_task_lands_on_a_sunday(self):
+        """Sunday is the cleaning day: nothing weekly may fall elsewhere."""
+        for task in self.store.state["tasks"]:
+            rec = task["recurrence"]
+            if rec["type"] == "weekly":
+                self.assertIn(0, rec["days"],
+                              "%s does not include Sunday" % task["name"])
 
     def test_a_task_needs_a_name(self):
         with self.assertRaises(ValueError):

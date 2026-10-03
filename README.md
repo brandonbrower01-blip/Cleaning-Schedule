@@ -8,9 +8,9 @@ green, dirt brown and white, in beveled blocks.
 
 ## What it does
 
-- **Recurring tasks.** Every N days, chosen weekdays, a day of the month, or a
-  one-off. The clock restarts from the day you actually check something off, so
-  a task done late doesn't stay permanently out of step.
+- **Recurring tasks.** Every N days, chosen weekdays (every week, or every
+  second or third week), a day of the month, or a one-off. A task set to
+  Sundays stays on Sundays even when you get to it on the Tuesday.
 - **Today dashboard.** Overdue, due today, coming up this week, and everything
   you already finished today — each with a big tappable check box.
 - **Undo and snooze.** Check something off by mistake, tap it again. Not getting
@@ -33,8 +33,23 @@ cd Cleaning-Schedule
 python3 server.py --port 8080
 ```
 
-Then open `http://<server-ip>:8080/` on the iPad. The first run seeds a starter
-list of chores you can edit or delete. Ctrl-C stops it.
+Then open `http://<server-ip>:8080/` on the iPad. Ctrl-C stops it.
+
+The first run seeds the household schedule:
+
+| Chore | Room | Repeats |
+| --- | --- | --- |
+| Wash the dishes | Kitchen | Every day |
+| Clean off the table | Kitchen | Every day |
+| Vacuum | Whole House | Sundays and Wednesdays |
+| Sweep the kitchen | Kitchen | Sundays |
+| Clean the stove top | Kitchen | Sundays |
+| Dust | Whole House | Sundays |
+| Change the cat litter | Pets | Sundays |
+| Clean the bathrooms | Bathroom | Every other Sunday |
+
+Add, edit and delete them in the app — the list above is only the starting
+point.
 
 Options:
 
@@ -104,6 +119,19 @@ sudo nginx -t && sudo systemctl reload nginx
 ```
 
 The name itself has to come from your router's DNS or the iPad's hosts file.
+
+### Starting the chore list over
+
+The schedule above is seeded only when there is no data file yet. To go back to
+it on a machine that has already been running:
+
+```sh
+sudo systemctl stop blockchores
+sudo rm /var/lib/blockchores/chores.json
+sudo systemctl start blockchores
+```
+
+That erases the chore history along with it.
 
 ### Backups
 
@@ -175,7 +203,7 @@ A task looks like this:
 | Type | Fields | Example |
 | --- | --- | --- |
 | `days` | `every` | `{"type": "days", "every": 3}` |
-| `weekly` | `days` (0 = Sunday) | `{"type": "weekly", "days": [1, 4]}` |
+| `weekly` | `days` (0 = Sunday), optional `weeks` | `{"type": "weekly", "days": [0], "weeks": 2}` |
 | `monthly` | `day` (1–31, clamped in short months) | `{"type": "monthly", "day": 1}` |
 | `once` | `date` | `{"type": "once", "date": "2026-10-01"}` |
 

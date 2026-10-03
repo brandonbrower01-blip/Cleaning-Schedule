@@ -56,6 +56,11 @@ def sunday_weekday(d):
     return (d.weekday() + 1) % 7
 
 
+def week_start(d):
+    """The Sunday that begins this date's week."""
+    return d - timedelta(days=sunday_weekday(d))
+
+
 def days_in_month(year, month):
     if month == 12:
         return 31
@@ -93,7 +98,13 @@ def clean_recurrence(raw):
                 continue
             if 0 <= n <= 6 and n not in days:
                 days.append(n)
-        return {"type": "weekly", "days": sorted(days) or [1]}
+        try:
+            weeks = int(raw.get("weeks", 1))
+        except (TypeError, ValueError):
+            weeks = 1
+        return {"type": "weekly",
+                "days": sorted(days) or [1],
+                "weeks": min(8, max(1, weeks))}
 
     if kind == "monthly":
         try:
@@ -149,10 +160,18 @@ def base_next_due(task):
 
     if kind == "weekly":
         wanted = rec.get("days") or [1]
+        every_weeks = max(1, int(rec.get("weeks", 1)))
+        # The interval only starts counting once the task has been done, so a
+        # brand new fortnightly chore is not idle for a fortnight first.
+        base_week = week_start(last) if last else None
         cursor = floor
-        for _ in range(8):
+        for _ in range(7 * every_weeks + 7):
             if sunday_weekday(cursor) in wanted:
-                return iso(cursor)
+                if base_week is None:
+                    return iso(cursor)
+                gap = (week_start(cursor) - base_week).days // 7
+                if gap % every_weeks == 0:
+                    return iso(cursor)
             cursor += timedelta(days=1)
         return iso(floor)
 
@@ -180,7 +199,13 @@ def describe(rec):
     if kind == "weekly":
         names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         picked = [names[d] for d in rec.get("days") or []]
-        return "Weekly: " + (", ".join(picked) if picked else "Mon")
+        label = ", ".join(picked) if picked else "Mon"
+        weeks = int(rec.get("weeks", 1))
+        if weeks == 2:
+            return "Every other week: " + label
+        if weeks > 2:
+            return "Every %d weeks: %s" % (weeks, label)
+        return "Weekly: " + label
     if kind == "monthly":
         return "Monthly on day %d" % int(rec.get("day", 1))
     if kind == "once":
@@ -198,18 +223,21 @@ def new_id(prefix):
     return prefix + "_" + "".join(random.choice(alphabet) for _ in range(9))
 
 
+SUN, WED = 0, 3
+
 DEFAULT_TASKS = [
+    # daily
     ("Wash the dishes", "Kitchen", {"type": "days", "every": 1}),
-    ("Wipe the counters", "Kitchen", {"type": "days", "every": 1}),
-    ("Take out the trash", "Kitchen", {"type": "weekly", "days": [1, 4]}),
-    ("Sweep the floors", "Whole House", {"type": "days", "every": 3}),
-    ("Scrub the toilet", "Bathroom", {"type": "weekly", "days": [6]}),
-    ("Clean the mirror", "Bathroom", {"type": "days", "every": 7}),
-    ("Change the sheets", "Bedroom", {"type": "days", "every": 14}),
-    ("Vacuum the carpet", "Living Room", {"type": "weekly", "days": [6]}),
-    ("Dust the shelves", "Living Room", {"type": "days", "every": 10}),
-    ("Mow the lawn", "Outside", {"type": "days", "every": 10}),
-    ("Deep clean the fridge", "Kitchen", {"type": "monthly", "day": 1}),
+    ("Clean off the table", "Kitchen", {"type": "days", "every": 1}),
+    # twice a week
+    ("Vacuum", "Whole House", {"type": "weekly", "days": [SUN, WED]}),
+    # weekly, all on Sunday
+    ("Sweep the kitchen", "Kitchen", {"type": "weekly", "days": [SUN]}),
+    ("Clean the stove top", "Kitchen", {"type": "weekly", "days": [SUN]}),
+    ("Dust", "Whole House", {"type": "weekly", "days": [SUN]}),
+    ("Change the cat litter", "Pets", {"type": "weekly", "days": [SUN]}),
+    # every other Sunday
+    ("Clean the bathrooms", "Bathroom", {"type": "weekly", "days": [SUN], "weeks": 2}),
 ]
 
 

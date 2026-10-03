@@ -474,6 +474,7 @@
     byId('f-every').value = rec.every || 7;
     byId('f-dom').value = rec.day || 1;
     byId('f-date').value = rec.date || today();
+    byId('f-weeks').value = rec.weeks || 1;
     weekdays = (rec.type === 'weekly' && rec.days && rec.days.length) ? rec.days.slice() : [1];
 
     paintWeekdays();
@@ -489,7 +490,11 @@
   function collectRecurrence() {
     var type = byId('f-type').value;
     if (type === 'weekly') {
-      return { type: 'weekly', days: weekdays.length ? weekdays : [1] };
+      return {
+        type: 'weekly',
+        days: weekdays.length ? weekdays : [1],
+        weeks: Number(byId('f-weeks').value) || 1
+      };
     }
     if (type === 'monthly') {
       return { type: 'monthly', day: Number(byId('f-dom').value) || 1 };
