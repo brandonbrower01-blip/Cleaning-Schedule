@@ -75,6 +75,45 @@ is no account to create, and nothing outside that directory is writable.
 
 Use a different port with `sudo PORT=80 sh deploy/install.sh`.
 
+**No `sudo` on your user?** If you set a root password when you installed
+Debian, your login was not added to the `sudo` group, and you will get
+`<user> is not in the sudoers file`. Either become root and run the installer
+without `sudo`:
+
+```sh
+su -
+cd /home/<user>/Cleaning-Schedule
+sh deploy/install.sh
+exit
+```
+
+or give your login sudo once and for all (then log out and back in):
+
+```sh
+su -
+/usr/sbin/usermod -aG sudo <user>
+exit
+```
+
+### "detected dubious ownership in repository"
+
+```
+fatal: detected dubious ownership in repository at '/home/<user>/Cleaning-Schedule'
+```
+
+This means the clone is owned by a different user than the one running `git` —
+usually because it was cloned as root. Git's suggested `safe.directory` line
+silences the warning but leaves the files root-owned, so the next `git pull`
+fails again when it tries to write. Fix the ownership instead:
+
+```sh
+su -
+chown -R <user>:<user> /home/<user>/Cleaning-Schedule
+exit
+```
+
+Then `git pull` works as your normal user.
+
 ```sh
 systemctl status blockchores      # is it up
 journalctl -u blockchores -f      # watch the log
